@@ -9,7 +9,7 @@ const isWin = os.platform() === "win32";
 const libPath = path.join(__dirname, "../lib");
 const vscodePath = path.join(libPath, "vscode");
 const pkgsPath = path.join(__dirname, "../packages");
-const defaultExtensionsPath = path.join(libPath, "VSCode-linux-x64/resources/app/extensions");
+const defaultExtensionsPath = path.join(libPath, `VSCode-linux-${os.arch()}/resources/app/extensions`);
 
 const buildServerBinary = register("build:server:binary", async (runner) => {
 	await ensureInstalled();
@@ -63,7 +63,7 @@ const dependencyNexeBinary = register("dependency:nexe", async (runner) => {
 			if (!fs.existsSync(upxBinary)) {
 				fse.mkdirpSync(upxFolder);
 				runner.cwd = upxFolder;
-				const upxExtract = await runner.execute("bash", ["-c", "curl -L https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz | tar xJ --strip-components=1"]);
+				const upxExtract = await runner.execute("bash", ["-c", `curl -L https://github.com/upx/upx/releases/download/v3.95/upx-3.95-${os.arch()}_linux.tar.xz | tar xJ --strip-components=1`]);
 				if (upxExtract.exitCode !== 0) {
 					throw new Error(`Failed to extract upx: ${upxExtract.stderr}`);
 				}
@@ -196,7 +196,7 @@ const buildDefaultExtensions = register("build:default-extensions", async (runne
 	if (!fs.existsSync(defaultExtensionsPath)) {
 		await copyForDefaultExtensions();
 		runner.cwd = extDirPath;
-		const resp = await runner.execute(isWin ? "npx.cmd" : "npx", [isWin ? "gulp.cmd" : "gulp", "vscode-linux-x64", "--max-old-space-size=32384"]);
+		const resp = await runner.execute(isWin ? "npx.cmd" : "npx", [isWin ? "gulp.cmd" : "gulp", `vscode-linux-${os.arch()}`, "--max-old-space-size=32384"]);
 		if (resp.exitCode !== 0) {
 			throw new Error(`Failed to build default extensions: ${resp.stderr}`);
 		}
